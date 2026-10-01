@@ -5,7 +5,7 @@
 [![CI](https://github.com/AkashNaickar/ProjectOMNI/actions/workflows/ci.yml/badge.svg)](https://github.com/AkashNaickar/ProjectOMNI/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-<!-- Live demo link is added once the Render deployment is verified. -->
+**Live demo:** [https://project-omni-frontend-zrnk.onrender.com](https://project-omni-frontend-zrnk.onrender.com) · API: [https://project-omni-backend-zrnk.onrender.com](https://project-omni-backend-zrnk.onrender.com)
 
 Project Omni is an end-to-end data intelligence platform that analyzes, predicts, and visualizes the impact of climate change on global agriculture. It correlates decades of FAOSTAT crop-yield data with temperature anomalies to score regional resilience and project yields per country and crop.
 
