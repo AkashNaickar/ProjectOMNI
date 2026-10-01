@@ -32,11 +32,24 @@ wheels/
 .installed.cfg
 *.egg
 
+# Secrets / credentials (never track)
+replacements.txt
+*.key
+secrets.*
+
 # Data & CSVs (Large files)
 *.csv
 !python-backend/data/cleaned_crop_data.csv
 python-backend/data/fao_data/
 my_fao_data.csv
+
+# Audit / scratch litter
+audit_*.txt
+audit_*.py
+pipeline_audit*.py
+final_integration_check.py
+raw_crops.txt
+failed_match.txt
 
 # Next.js
 .next/
