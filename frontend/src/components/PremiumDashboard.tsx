@@ -1490,7 +1490,7 @@ export default function PremiumDashboard() {
                           Physical Adaptation Strategy
                         </h3>
                         <p className="text-base text-slate-200 leading-relaxed font-serif">
-                          "{marketSimulation.Adaptation_Strategy}"
+                          &ldquo;{marketSimulation.Adaptation_Strategy}&rdquo;
                         </p>
                         
                         <div className="mt-6 pt-5 border-t border-slate-800/80">
