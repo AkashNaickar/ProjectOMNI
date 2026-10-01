@@ -16,6 +16,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Next.js inlines NEXT_PUBLIC_* values into the client bundle at build time.
+# Render translates service environment variables into Docker build args, so
+# declare the arg here to bake the deployed backend URL into the image.
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
 
