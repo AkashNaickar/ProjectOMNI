@@ -6,9 +6,6 @@ import os
 import pycountry
 import functools
 
-import logging
-import math
-import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
@@ -62,8 +59,10 @@ def get_iso3(country_name: str) -> str | None:
     if len(country_name) == 3:
         try:
             res = pycountry.countries.get(alpha_3=country_name.upper())
-            if res: return res.alpha_3
-        except: pass
+            if res:
+                return res.alpha_3
+        except Exception:
+            pass
 
     # 3. Standard Lookup
     try:
@@ -107,18 +106,21 @@ class OLSYieldModel:
         self.is_trained = False
 
     def fit(self, data):
-        if not data: return
+        if not data:
+            return
         groups = {}
         for row in data:
             key = (row["Country"], row["Crop"])
-            if key not in groups: groups[key] = {"X_year": [], "X_temp": [], "y": []}
+            if key not in groups:
+                groups[key] = {"X_year": [], "X_temp": [], "y": []}
             groups[key]["X_year"].append(float(row["Year"]))
             groups[key]["X_temp"].append(float(row["TempAnomaly_C"]))
             groups[key]["y"].append(float(row["Yield_tonnes_ha"]))
 
         for key, g in groups.items():
             n = len(g["y"])
-            if n < 5: continue
+            if n < 5:
+                continue
             
             y, x1, x2 = g["y"], g["X_year"], g["X_temp"]
             sum_y, sum_x1, sum_x2 = sum(y), sum(x1), sum(x2)
@@ -132,7 +134,8 @@ class OLSYieldModel:
                    sum_x1 * (sum_x1 * sum_x2x2 - sum_x1x2 * sum_x2) + 
                    sum_x2 * (sum_x1 * sum_x1x2 - sum_x1x1 * sum_x2))
 
-            if abs(det) < 1e-9: continue
+            if abs(det) < 1e-9:
+                continue
 
             b0 = (sum_y * (sum_x1x1 * sum_x2x2 - sum_x1x2**2) - 
                   sum_x1 * (sum_x1y * sum_x2x2 - sum_x1x2 * sum_x2y) + 
@@ -193,7 +196,8 @@ class XGBoostYieldModel:
         logging.info(f"Registered {len(self.training_data)} potential XGBoost models for Lazy Training.")
 
     def _train_single_model(self, key):
-        if key not in self.training_data or key in self.models: return
+        if key not in self.training_data or key in self.models:
+            return
 
         g = self.training_data[key]
         if len(g["y"]) < 5: 
@@ -262,7 +266,8 @@ class SARIMAXYieldModel:
         logging.info(f"Registered {len(self.training_data)} potential SARIMAX models for Lazy Training.")
 
     def _train_single_model(self, key):
-        if key not in self.training_data or key in self.models: return
+        if key not in self.training_data or key in self.models:
+            return
 
         df = self.training_data[key]
         if len(df) < 10: 
@@ -354,7 +359,8 @@ class ProphetYieldModel:
         logging.info(f"Registered {len(self.training_data)} potential Prophet models for Lazy Training.")
 
     def _train_single_model(self, key):
-        if key not in self.training_data or key in self.models: return
+        if key not in self.training_data or key in self.models:
+            return
 
         df = self.training_data[key]
         if len(df) < 5: 
@@ -433,9 +439,12 @@ class OmniStackingModel:
                  ci_spread = res["confidence_high"] - res["confidence_low"]
                  
                  inherent_trust = 1.0
-                 if m == 'xgboost': inherent_trust = 1.2
-                 if m == 'prophet': inherent_trust = 1.0 # Removed artificial boost for prophet as it already has tight CIs
-                 if m == 'ols': inherent_trust = 0.8 
+                 if m == 'xgboost':
+                     inherent_trust = 1.2
+                 if m == 'prophet':
+                     inherent_trust = 1.0  # Removed artificial boost for prophet as it already has tight CIs
+                 if m == 'ols':
+                     inherent_trust = 0.8
 
                  # Prevent extreme weighting from very narrow CIs by setting a floor
                  if ci_spread > 0:
@@ -485,23 +494,23 @@ class ModelFactory:
         self.strategies['ols'].fit(data)
 
         try:
-            import xgboost
+            import xgboost  # noqa: F401 - availability probe
             self.strategies['xgboost'] = XGBoostYieldModel()
             self.strategies['xgboost'].fit(data)
         except ImportError:
             logging.warning("XGBoost not installed. Skipping XGBoost model.")
             
         try:
-            import statsmodels
-            import pandas
+            import statsmodels  # noqa: F401 - availability probe
+            import pandas  # noqa: F401 - availability probe
             self.strategies['arima/sarima'] = SARIMAXYieldModel()
             self.strategies['arima/sarima'].fit(data)
         except ImportError:
             logging.warning("Statsmodels or Pandas not installed. Skipping SARIMAX model.")
 
         try:
-            import prophet
-            import pandas
+            import prophet  # noqa: F401 - availability probe
+            import pandas  # noqa: F401 - availability probe
             self.strategies['prophet'] = ProphetYieldModel()
             self.strategies['prophet'].fit(data)
         except ImportError:
@@ -515,9 +524,8 @@ class ModelFactory:
 
     def predict(self, model_type, country, crop, year, temp_anomaly):
         if model_type not in self.strategies:
-            model_type = 'ols' # Fallback
-            
-        key = (country, crop)
+            model_type = 'ols'  # Fallback
+
         # Assuming the specific strategy has a predict method that returns a dict
         result = self.strategies[model_type].predict(country, crop, year, temp_anomaly)
         
