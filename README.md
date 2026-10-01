@@ -1,64 +1,118 @@
-# 🌍 Project Omni: Climate Resilience Analytics
+# Project Omni: Climate Resilience Analytics
 
-> **Empowering global food security through recursive analytics and sustainable crop yield projections.**
+> Global food-security analytics: FAOSTAT crop yields correlated with temperature anomalies, forecast to 2050.
 
-Project Omni is an end-to-end data intelligence platform designed to analyze, predict, and visualize the impact of climate change on global agriculture. By correlating decades of FAOSTAT crop yield data with temperature anomalies, Omni provides actionable insights into regional resilience.
+[![CI](https://github.com/AkashNaickar/ProjectOMNI/actions/workflows/ci.yml/badge.svg)](https://github.com/AkashNaickar/ProjectOMNI/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
----
+<!-- Live demo link is added once the Render deployment is verified. -->
 
-## ✨ Key Features
+Project Omni is an end-to-end data intelligence platform that analyzes, predicts, and visualizes the impact of climate change on global agriculture. It correlates decades of FAOSTAT crop-yield data with temperature anomalies to score regional resilience and project yields per country and crop.
 
-- **🌐 Interactive Global Heatmap:** A high-performance Leaflet-based globe visualizing crop resilience scores across every continent.
-- **📈 Micro-Linear Forecasting:** Leveraging over 17,000 independent linear regression models to provide high-precision, crop-specific yield extrapolations up to 2050.
-- **⚡ Recursive Data Pipeline:** A robust Haskell-powered ingestion engine capable of cleaning and formatting nearly 1 million rows of raw FAOSTAT data in seconds.
-- **🛡️ Resilience Scoring:** Advanced detrending algorithms that isolate climate shocks from technological progress to provide a "True Resilience" score (/10).
-- **✨ Premium Dashboard:** A modern, glassmorphic UI built with Next.js, Framer Motion, and Tailwind CSS.
+## Features
 
----
+- **Interactive global heatmap** — Leaflet-based globe visualizing crop resilience scores across every continent.
+- **Micro-linear forecasting** — 17,000+ independent per-country, per-crop linear regression models projecting yields to 2050.
+- **Functional data pipeline** — a Haskell ingestion engine that cleans and formats raw FAOSTAT data with ADT-based domain modeling and `Maybe`/`Either` error handling.
+- **Resilience scoring** — detrending algorithms that isolate climate shocks from technological progress into a 0–10 "True Resilience" score.
+- **Premium dashboard** — glassmorphic UI built with Next.js, Framer Motion, and Tailwind CSS.
 
-## 🛠️ Tech Stack
+## Architecture
 
-### **Data Engineering: The Haskell Functional Pipeline**
+```mermaid
+flowchart LR
+    A[Raw FAOSTAT CSV] --> B[Haskell pipeline<br/>parse, clean, aggregate]
+    B --> C[cleaned_crop_data.csv]
+    C --> D[Python backend<br/>stdlib HTTP server + OLS ensemble]
+    D --> E[JSON REST API<br/>/api/data, /api/predict, /api/resilience]
+    E --> F[Next.js frontend<br/>globe, charts, dashboard]
+    G[Gemini API<br/>optional market simulation] --> D
+```
 
-The core of Project Omni's data integrity lies in its **Pure Functional Pipeline** implemented in Haskell. This layer isn't just a "loader"; it is a mathematically rigorous data transformation engine that ensures the Python ML layer receives high-fidelity signals.
+## Tech Stack
 
-#### **Key Technical Implementation Details:**
+| Layer | Technology |
+|-------|-----------|
+| Data pipeline | Haskell (Stack), pure functional transforms |
+| Backend | Python 3 standard library (`http.server`), dependency-free OLS, optional Gemini enrichment |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4, Framer Motion, Leaflet, Recharts |
+| Deployment | Docker, Render (`render.yaml`) |
 
--   **Algebraic Data Types (ADTs) for Domain Modeling:** We use sum and product types (e.g., `data CropRecord = CropRecord { ... }`) to represent the FAOSTAT schema. This provides compile-time guarantees that the data transformation logic accounts for every possible state of a record, virtually eliminating runtime `null` or `undefined` errors.
--   **Safe Monadic Parsing:** The ingestion engine utilizes monadic interfaces to parse nearly 1 million rows. Unlike imperative scripts that might crash on a single malformed line, our Haskell engine treats parsing as a transition between `Maybe` or `Either` types, allowing for graceful error accumulation and data sanitization.
--   **Lazy Evaluation & Memory Efficiency:** Leveraging Haskell's lazy evaluation, the pipeline processes the massive 940k+ row dataset using constant space. It streams transformations through a series of "Pure Pipes" (Filtering -> Grouping -> Aggregation), preventing the memory overflows common in Python-based data frames for similar scales.
--   **Pure Transformation Kernels:** All statistical calculations—including the 5-year rolling average and yield shock detrending—are implemented as **Pure Functions**. This ensures "Referential Transparency," meaning the same input always produces the exact same cleaned data, making the system highly testable and verifiable for academic assignments.
+**Note on the backend:** the API is implemented with Python's standard library (`http.server` / `BaseHTTPRequestHandler`) — it does **not** use FastAPI or Flask. The only third-party runtime dependencies are `pycountry` (ISO-3 lookup) and the optional `google-generativeai` SDK for market simulation. Heavier models (XGBoost, SARIMAX, Prophet) are loaded opportunistically when installed and gracefully skipped otherwise.
 
----
+## Quick Start (Docker)
 
-### **Intelligence Layer (Python)**
+```bash
+docker compose up --build
+```
 
-A FastAPI-driven backend utilizing `scikit-learn`.
+- Dashboard: http://localhost:3000
+- API: http://localhost:8000/api/metadata
 
-- **Architecture:** Per-country, per-crop micro-regressions.
-- **Math:** Yield Shock Correlation Analysis (Pearson Correlation on detrended series).
+## Quick Start (local)
 
-### **Visualization Layer (Next.js & React)**
+1. **Pipeline (optional — cleaned data ships in the repo):**
+   ```bash
+   cd haskell-pipeline && stack run
+   ```
+2. **Backend:**
+   ```bash
+   cd python-backend
+   python -m venv venv && venv/Scripts/activate   # or source venv/bin/activate
+   pip install -r requirements.txt
+   python main.py
+   ```
+3. **Frontend:**
+   ```bash
+   cd frontend
+   npm ci
+   npm run dev
+   ```
 
-A premium frontend experience:
+Open http://localhost:3000.
 
-- **UI:** Tailwind CSS & Framer Motion for smooth, high-fidelity interactions.
-- **Charts:** Recharts for optimized time-series visualization.
-- **Maps:** Leaflet.js with custom-themed dark layers for global analysis.
+## Environment Variables
 
----
+| Variable | Service | Required | Description |
+|----------|---------|----------|-------------|
+| `GEMINI_API_KEY` | backend | No | Enables Gemini-powered market simulation; the API runs without it. |
+| `DATA_PATH` | backend | No | Absolute path to `cleaned_crop_data.csv`; defaults to `python-backend/data/cleaned_crop_data.csv`. |
+| `PORT` | backend | No | Listen port; defaults to `8000` (Render sets it automatically). |
+| `NEXT_PUBLIC_API_URL` | frontend | No | Backend base URL, e.g. `https://project-omni-backend.onrender.com`; defaults to `http://localhost:8000`. |
 
-## 🚀 Getting Started
+Copy `.env.example` (create your own locally — never commit real values) or set them in your platform's dashboard.
 
-1. **Pipeline:** Run `haskell-pipeline/Main.hs` to generate the cleaned dataset (`cleaned_crop_data.csv`).
-2. **Backend:** Navigate to `python-backend/` and run `python main.py`.
-3. **Frontend:** Navigate to `frontend/` and run `npm run dev`.
+## Testing
 
-*Access the dashboard at `http://localhost:3000`*
+```bash
+pip install -r python-backend/requirements.txt pytest
+pytest python-backend/tests -q
+```
 
----
+The suite covers the dependency-free OLS model (fit/predict/confidence bands), ISO-3 country resolution, registry integrity, and the bundled dataset shape.
 
-## ⚖️ License
+## Deployment
 
-MIT License. Created for the Advanced Agentic Coding Hackathon.
+Both services deploy to Render from `render.yaml` (Blueprint):
 
+- `project-omni-backend` — Docker runtime, serves the API.
+- `project-omni-frontend` — Docker runtime, serves the dashboard.
+
+Set `GEMINI_API_KEY` and `NEXT_PUBLIC_API_URL` in the Render dashboard after the first deploy.
+
+## Roadmap
+
+- [ ] Replace the stdlib HTTP server with a typed ASGI framework if the API surface grows.
+- [ ] Move the cleaned dataset to object storage with lazy download to slim the repo.
+- [ ] Add frontend unit tests (Vitest) alongside the backend suite.
+- [ ] Cache Gemini simulation responses to cut latency and cost.
+
+## Contributing
+
+1. Fork and create a feature branch (`git checkout -b feat/my-change`).
+2. Run `ruff check python-backend --select E4,E7,E9,F` and `pytest python-backend/tests -q` before committing.
+3. Open a PR; CI must be green before merge.
+
+## License
+
+[MIT](LICENSE) © Akash Naickar. Created for the Advanced Agentic Coding Hackathon.
