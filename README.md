@@ -78,7 +78,7 @@ Open http://localhost:3000.
 | `GEMINI_API_KEY` | backend | No | Enables Gemini-powered market simulation; the API runs without it. |
 | `DATA_PATH` | backend | No | Absolute path to `cleaned_crop_data.csv`; defaults to `python-backend/data/cleaned_crop_data.csv`. |
 | `PORT` | backend | No | Listen port; defaults to `8000` (Render sets it automatically). |
-| `NEXT_PUBLIC_API_URL` | frontend | No | Backend base URL, e.g. `https://project-omni-backend.onrender.com`; defaults to `http://localhost:8000`. |
+| `NEXT_PUBLIC_API_URL` | frontend | No | Backend base URL, e.g. `https://project-omni-backend-zrnk.onrender.com`. Inlined into the client bundle at build time (see `frontend/Dockerfile`); defaults to `http://localhost:8000`. |
 
 Copy `.env.example` (create your own locally — never commit real values) or set them in your platform's dashboard.
 
