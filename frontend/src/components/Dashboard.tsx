@@ -167,7 +167,7 @@ export default function Dashboard() {
             <h3>Prediction Result</h3>
             <p>
               In {prediction.year}, under a temperature increase of <strong>+{prediction.temp_increase_c}°C</strong>, 
-              the mocked predictive model forecasts that {prediction.country}'s {prediction.crop} yield will be:
+              the mocked predictive model forecasts that {prediction.country}&apos;s {prediction.crop} yield will be:
             </p>
             <h1 style={{ color: "#2E8B57" }}>{prediction.predicted_yield_tonnes_ha} tonnes/ha</h1>
           </div>

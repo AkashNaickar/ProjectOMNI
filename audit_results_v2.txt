@@ -1,8 +1,0 @@
-{
-    "stage1_raw": 34026,
-    "stage2_cleaned": 18361,
-    "stage3_iso_tuples": 13623,
-    "stage3_unique_isos": 207,
-    "stage4_eligible_tuples": 18142,
-    "stage5_rendered_tuples": 13443
-}

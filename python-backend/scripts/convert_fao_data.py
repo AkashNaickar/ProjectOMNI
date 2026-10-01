@@ -2,7 +2,6 @@ import pandas as pd
 import argparse
 import sys
 import numpy as np
-import os
 
 def convert_fao_to_omni(input_file, output_file):
     print(f"Reading FAO data from {input_file}...")
